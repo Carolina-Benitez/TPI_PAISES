@@ -5,13 +5,14 @@ Este proyecto es un trabajo práctico integrador desarrollado en Python.
 Permite **gestionar información de países** a través de un archivo CSV, aplicando conceptos de listas, diccionarios, funciones, estructuras condicionales, ordenamientos y estadísticas básicas.
 
 ## Funcionalidades principales
-- Agregar países al archivo CSV.
-- Actualizar población o superficie.
-- Buscar países por nombre.
-- Filtrar por continente, rango de población o superficie.
-- Ordenar países (por nombre, población o superficie).
-- Calcular estadísticas:  
-  país con mayor/menor población, promedios y cantidad por continente.
+• Agregar países al archivo CSV.
+• Listar todos los países con sus datos almacenados en el archivo.
+• Actualizar la población o superficie de un país existente.
+• Eliminar un país del registro.
+• Buscar países por nombre.
+• Filtrar por continente, rango de población o superficie.
+• Ordenar países por nombre, población o superficie, en forma ascendente o descendente.
+• Calcular estadísticas: país con mayor y menor población, promedios generales y cantidad de países por continente.
 
 ## Conceptos aplicados
 - **Listas:** para almacenar múltiples países.  
