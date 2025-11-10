@@ -1,43 +1,68 @@
-# Gestor de Países — TPI 
+# 🐍 Gestor de Países – Trabajo Práctico Integrador
+### Materia: Programación I  
+### Tecnicatura Universitaria en Programación a Distancia  
 
-## Descripción del programa
-Este proyecto es un trabajo práctico integrador desarrollado en Python.  
-Permite **gestionar información de países** a través de un archivo CSV, aplicando conceptos de listas, diccionarios, funciones, estructuras condicionales, ordenamientos y estadísticas básicas.
+---
 
-## Funcionalidades principales
-• Agregar países al archivo CSV.
-• Listar todos los países con sus datos almacenados en el archivo.
-• Actualizar la población o superficie de un país existente.
-• Eliminar un país del registro.
-• Buscar países por nombre.
-• Filtrar por continente, rango de población o superficie.
-• Ordenar países por nombre, población o superficie, en forma ascendente o descendente.
-• Calcular estadísticas: país con mayor y menor población, promedios generales y cantidad de países por continente.
+## 🧩 Descripción del programa
+El **Gestor de Países** es una aplicación desarrollada en Python que permite **administrar información sobre países** utilizando un archivo CSV como base de datos.  
+El sistema integra los principales conceptos aprendidos durante la cursada: **listas, diccionarios, funciones, estructuras condicionales, bucles, validaciones, ordenamientos y cálculos estadísticos**.
 
-## Conceptos aplicados
-- **Listas:** para almacenar múltiples países.  
-- **Diccionarios:** para guardar los datos de cada país con claves (`NOMBRE`, `POBLACION`, etc).  
-- **Funciones:** organizan el código por tareas (agregar, buscar, filtrar, etc).  
-- **Condicionales:** controlan las decisiones del programa (`if`, `elif`, `else`).  
-- **Ordenamientos:** algoritmo burbuja implementado manualmente.  
-- **Estadísticas básicas:** cálculos de promedio y extremos.  
-- **Archivos CSV:** lectura y escritura de datos estructurados.
+El usuario puede agregar, modificar, eliminar y buscar países, además de aplicar filtros, ordenar registros y generar indicadores generales como promedios y conteos por continente.
 
-## Ejemplos de entradas y salidas
-### Entrada: Agregar país
+---
+
+## ⚙️ Instrucciones de uso
+1. Guardar los archivos `TPI_con_correccion.py` y `paises.csv` en la misma carpeta.  
+2. Ejecutar el programa desde la terminal o Visual Studio Code con el comando:
+   ```bash
+   python TPI_con_correccion.py
+   ```
+3. Elegir una de las opciones del menú:
+   - Agregar país  
+   - Actualizar población y superficie  
+   - Buscar o listar países  
+   - Eliminar registros  
+   - Filtrar y ordenar  
+   - Mostrar estadísticas  
+   - Salir y guardar cambios  
+
+Los datos se guardan automáticamente en el archivo `paises.csv` al salir del programa.
+
+---
+
+## 💻 Ejemplos de entradas y salidas
+
+**Entrada – Agregar país:**
+```
 Nombre: Argentina
-Población: 45000000
-Superficie: 2000000
+Población: 45376763
+Superficie: 2780400
 Continente: América
-### Salida:
+```
+
+**Salida:**
+```
 País 'Argentina' agregado correctamente.
+```
 
-## Instrucciones de uso
-1. Guardar los archivos `tpi.py` y `paises.csv` en la misma carpeta.  
-2. Abrir una terminal en esa carpeta.  
-3. Ejecutar el programa:
-4. Seguir las opciones del menú en pantalla.
+**Entrada – Filtrar países por población:**
+```
+Población mínima: 50000000
+Población máxima: 150000000
+```
 
+**Salida:**
+```
+Brasil | 213993437 habitantes | 8515767 km² | América
+Japón  | 125800000 habitantes | 377975 km²  | Asia
+```
 
+---
 
+## 👩‍💻 Participación de los integrantes
+
+- **Carolina Benítez (Comisión 8):** desarrollo inicial del código, estructura del menú y documentación del programa, grabación del video presentativo del TPI.
+
+- **Lorena Romina Soto Aravena (Comisión 13):** validaciones, depuración final, grabación del video presentativo del TPI y documentación complementaria (marco teórico y conclusiones).
 
