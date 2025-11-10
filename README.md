@@ -33,7 +33,7 @@ Continente: América
 País 'Argentina' agregado correctamente.
 
 ## Instrucciones de uso
-1. Guardar los archivos `TPI.py` y `paises.csv` en la misma carpeta.  
+1. Guardar los archivos `tpi.py` y `paises.csv` en la misma carpeta.  
 2. Abrir una terminal en esa carpeta.  
 3. Ejecutar el programa:
 4. Seguir las opciones del menú en pantalla.
