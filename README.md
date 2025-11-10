@@ -16,7 +16,7 @@ El usuario puede agregar, modificar, eliminar y buscar países, además de aplic
 1. Guardar los archivos `TPI_con_correccion.py` y `paises.csv` en la misma carpeta.  
 2. Ejecutar el programa desde la terminal o Visual Studio Code con el comando:
    ```bash
-   python TPI_con_correccion.py
+   python TPI.py
    ```
 3. Elegir una de las opciones del menú:
    - Agregar país  
