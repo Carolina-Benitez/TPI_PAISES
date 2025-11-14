@@ -1,0 +1,464 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+TPI_corregido.py
+-consigna/rúbrica, sin try/except ni lambda, CSV robusto
+- Cambio solicitado: opción 7 ahora **ORDENA** por Población o Superficie (Asc/Desc).
+  Ya no pide mínimo/máximo. Opción 8 sigue siendo ordenar general (incluye Nombre).
+"""
+
+import csv
+import os
+
+CAMPOS = ["NOMBRE","POBLACION","SUPERFICIE","CONTINENTE"]
+
+# --- utilidades de texto ---
+def a_minusculas_sin_tildes(s):
+    s2 = s.lower()
+    s2 = s2.replace("á","a").replace("é","e").replace("í","i").replace("ó","o").replace("ú","u")
+    s2 = s2.replace("ä","a").replace("ë","e").replace("ï","i").replace("ö","o").replace("ü","u")
+    s2 = s2.replace("ç","c").replace("ñ","n")
+    return s2
+
+def limpiar_numero(s):
+    s2 = s.replace(".", "").replace(",", "").replace(" ", "")
+    return s2
+
+def normalizar_continente_libre(texto):
+    if not texto:
+        return None
+    t = texto.strip()
+    t = a_minusculas_sin_tildes(t)
+    t = t.replace("-", " ").replace("_", " ")
+    while "  " in t:
+        t = t.replace("  ", " ")
+    if "america" in t or "latinoamerica" in t or "suramerica" in t or "norteamerica" in t or "centroamerica" in t:
+        return "america"
+    if "africa" in t or "magreb" in t or "subsahar" in t:
+        return "africa"
+    if "europa" in t:
+        return "europa"
+    if "asia" in t or "eurasia" in t:
+        return "asia"
+    if "oceania" in t or "australasia" in t or "australia y oceania" in t or "australia/oceania" in t or "pacifico" in t:
+        return "oceania"
+    if "antart" in t or "antartico" in t or "antartida" in t:
+        return "antartida"
+    return None
+
+# ---------------- CSV I/O ----------------
+
+def cargar_datos(nombre_archivo):
+    paises = []
+    total = 0
+    descartadas = 0
+    motivo_vacios = 0
+    motivo_numeros = 0
+    motivo_continente = 0
+
+    if os.path.exists(nombre_archivo):
+        with open(nombre_archivo, "r", encoding="utf-8", newline="") as f:
+            reader = csv.reader(f)
+            filas = list(reader)
+            if not filas:
+                print("El CSV está vacío.")
+                return []
+            encabezados = filas[0]
+            if len(encabezados) < 4:
+                print("Encabezados incompletos. Se esperaba:", CAMPOS)
+                return []
+            h0 = encabezados[0].lstrip("\ufeff").strip().upper()
+            h1 = encabezados[1].strip().upper()
+            h2 = encabezados[2].strip().upper()
+            h3 = encabezados[3].strip().upper()
+            if not (h0.startswith("NOMBRE") and "POBL" in h1 and "SUPER" in h2 and "CONT" in h3):
+                print("Encabezados no reconocidos. Se esperaba:", CAMPOS)
+                return []
+
+            i = 1
+            while i < len(filas):
+                total += 1
+                row = filas[i]
+                if len(row) < 4:
+                    motivo_vacios += 1
+                    descartadas += 1
+                    i += 1
+                    continue
+
+                nombre = row[0].strip()
+                pob = limpiar_numero(row[1].strip())
+                sup = limpiar_numero(row[2].strip())
+                cont_original = row[3].strip()
+
+                if not nombre or not pob or not sup or not cont_original:
+                    motivo_vacios += 1
+                    descartadas += 1
+                    i += 1
+                    continue
+
+                if not pob.isdigit() or not sup.isdigit():
+                    motivo_numeros += 1
+                    descartadas += 1
+                    i += 1
+                    continue
+
+                cont = normalizar_continente_libre(cont_original)
+                if cont is None:
+                    motivo_continente += 1
+                    descartadas += 1
+                    i += 1
+                    continue
+
+                pais = {
+                    "NOMBRE": nombre,
+                    "POBLACION": int(pob),
+                    "SUPERFICIE": int(sup),
+                    "CONTINENTE": cont
+                }
+                paises.append(pais)
+                i += 1
+
+        print(f"Diagnóstico importación: {total} fila(s) de datos, {len(paises)} válida(s), {descartadas} descartada(s).")
+        if descartadas > 0:
+            if motivo_vacios:
+                print(" - Descartadas por campos vacíos:", motivo_vacios)
+            if motivo_numeros:
+                print(" - Descartadas por números inválidos:", motivo_numeros)
+            if motivo_continente:
+                print(" - Descartadas por continente no reconocido:", motivo_continente)
+    else:
+        print("No se encontró el archivo:", nombre_archivo)
+    return paises
+
+def guardar_datos(nombre_archivo, paises):
+    with open(nombre_archivo, "w", encoding="utf-8", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(CAMPOS)
+        i = 0
+        while i < len(paises):
+            p = paises[i]
+            writer.writerow([p["NOMBRE"], p["POBLACION"], p["SUPERFICIE"], p["CONTINENTE"]])
+            i += 1
+
+# ---------------- entradas ----------------
+
+def input_no_vacio(mensaje):
+    s = input(mensaje).strip()
+    while not s:
+        print("No se permiten campos vacíos.")
+        s = input(mensaje).strip()
+    return s
+
+def input_entero(mensaje):
+    s = input_no_vacio(mensaje)
+    s2 = limpiar_numero(s)
+    while not s2.isdigit():
+        print("Debe ser un entero válido.")
+        s = input_no_vacio(mensaje)
+        s2 = limpiar_numero(s)
+    return int(s2)
+
+# ---------------- operaciones ----------------
+
+def mostrar_paises(paises):
+    if not paises:
+        print("\n(No hay países para mostrar)")
+        return
+    print("\nListado de países:")
+    print("-"*70)
+    i = 0
+    while i < len(paises):
+        p = paises[i]
+        print(f"{p['NOMBRE']:<20}  Pob: {p['POBLACION']:>10}  Sup: {p['SUPERFICIE']:>10}  Cont: {p['CONTINENTE']}")
+        i += 1
+    print("-"*70)
+    print("Total:", len(paises))
+
+def existe_pais(paises, nombre):
+    i = 0
+    nombre_b = nombre.lower()
+    while i < len(paises):
+        if paises[i]["NOMBRE"].lower() == nombre_b:
+            return True
+        i += 1
+    return False
+
+def agregar_pais(paises):
+    print("\nAGREGAR PAÍS")
+    nombre = input_no_vacio("Nombre del país: ")
+    if existe_pais(paises, nombre):
+        print("Ese país ya existe.")
+        return
+
+    pob = input_entero("Población (entero): ")
+    sup = input_entero("Superficie (entero, km²): ")
+    cont_ingresado = input_no_vacio("Continente (América, Europa, Asia, África, Antártida, Oceanía): ")
+    cont = normalizar_continente_libre(cont_ingresado)
+    if cont is None:
+        print("Continente inválido.")
+        return
+
+    paises.append({
+        "NOMBRE": nombre.strip(),
+        "POBLACION": int(pob),
+        "SUPERFICIE": int(sup),
+        "CONTINENTE": cont
+    })
+    print("País agregado. Total:", len(paises))
+
+def actualizar_pais(paises):
+    print("\nACTUALIZAR PAÍS (solo Población y Superficie)")
+    nombre = input_no_vacio("Nombre del país a actualizar: ")
+    i = 0
+    encontrado = False
+    while i < len(paises):
+        if paises[i]["NOMBRE"].lower() == nombre.lower():
+            encontrado = True
+            print("Deje vacío para no cambiar el campo.")
+            pob = input("Nueva población: ").strip()
+            if pob:
+                pob2 = limpiar_numero(pob)
+                if pob2.isdigit():
+                    paises[i]["POBLACION"] = int(pob2)
+                else:
+                    print("Valor inválido: se mantiene población anterior.")
+            sup = input("Nueva superficie: ").strip()
+            if sup:
+                sup2 = limpiar_numero(sup)
+                if sup2.isdigit():
+                    paises[i]["SUPERFICIE"] = int(sup2)
+                else:
+                    print("Valor inválido: se mantiene superficie anterior.")
+            print("Actualización finalizada.")
+            break
+        i += 1
+    if not encontrado:
+        print("País no encontrado.")
+
+def eliminar_pais(paises):
+    print("\nELIMINAR PAÍS")
+    nombre = input_no_vacio("Nombre del país a eliminar: ")
+    i = 0
+    while i < len(paises):
+        if paises[i]["NOMBRE"].lower() == nombre.lower():
+            confirma = input("Confirmar (s/n): ").strip().lower()
+            if confirma == "s":
+                eliminado = paises.pop(i)
+                print("Eliminado:", eliminado["NOMBRE"])
+            else:
+                print("Operación cancelada.")
+            return
+        i += 1
+    print("País no encontrado.")
+
+def buscar_pais(paises):
+    print("\nBUSCAR (coincidencia parcial en nombre)")
+    term = input_no_vacio("Texto a buscar: ").lower()
+    resultados = []
+    i = 0
+    while i < len(paises):
+        if term in paises[i]["NOMBRE"].lower():
+            resultados.append(paises[i])
+        i += 1
+    if resultados:
+        mostrar_paises(resultados)
+    else:
+        print("Sin coincidencias.")
+
+def filtrar_por_continente(paises):
+    print("\nFILTRAR POR CONTINENTE")
+    cont_ing = input_no_vacio("Continente: ")
+    cont = normalizar_continente_libre(cont_ing)
+    if cont is None:
+        print("Continente inválido.")
+        return
+    res = []
+    i = 0
+    while i < len(paises):
+        if paises[i]["CONTINENTE"] == cont:
+            res.append(paises[i])
+        i += 1
+    if res:
+        mostrar_paises(res)
+    else:
+        print("No hay países en ese continente.")
+
+# --- NUEVA opción 7: ordenar por Población o Superficie (Asc/Desc) ---
+def key_poblacion(p): return p["POBLACION"]
+def key_superficie(p): return p["SUPERFICIE"]
+
+def ordenar_pob_sup(paises):
+    print("\nORDENAR POR POBLACIÓN O SUPERFICIE")
+    print("1) Población")
+    print("2) Superficie")
+    campo = input_no_vacio("Campo (1-2): ")
+    print("A) Ascendente")
+    print("D) Descendente")
+    orden = input_no_vacio("Orden (A/D): ").upper()
+    reverse = False
+    if orden == "D":
+        reverse = True
+    elif orden != "A":
+        print("Orden inválido.")
+        return
+
+    if campo == "1":
+        paises.sort(key=key_poblacion, reverse=reverse)
+    elif campo == "2":
+        paises.sort(key=key_superficie, reverse=reverse)
+    else:
+        print("Campo inválido.")
+        return
+    print("Orden aplicado.")
+    mostrar_paises(paises)
+
+# --- opción 8 se mantiene: ordenar general (incluye Nombre) ---
+def key_nombre(p): return p["NOMBRE"].lower()
+
+def ordenar_paises(paises):
+    print("\nORDENAR (GENERAL)")
+    print("1) Nombre")
+    print("2) Población")
+    print("3) Superficie")
+    campo = input_no_vacio("Campo (1-3): ")
+    print("A) Ascendente")
+    print("D) Descendente")
+    orden = input_no_vacio("Orden (A/D): ").upper()
+    reverse = False
+    if orden == "D":
+        reverse = True
+    elif orden != "A":
+        print("Orden inválido.")
+        return
+
+    if campo == "1":
+        paises.sort(key=key_nombre, reverse=reverse)
+    elif campo == "2":
+        paises.sort(key=key_poblacion, reverse=reverse)
+    elif campo == "3":
+        paises.sort(key=key_superficie, reverse=reverse)
+    else:
+        print("Campo inválido.")
+        return
+    print("Orden aplicado.")
+    mostrar_paises(paises)
+
+def estadisticas(paises):
+    print("\nESTADÍSTICAS")
+    if not paises:
+        print("(No hay datos)")
+        return
+
+    i = 1
+    max_pob = paises[0]
+    min_pob = paises[0]
+    max_sup = paises[0]
+    min_sup = paises[0]
+
+    suma_pob = paises[0]["POBLACION"]
+    suma_sup = paises[0]["SUPERFICIE"]
+
+    conteo_cont = {}
+    c0 = paises[0]["CONTINENTE"]
+    conteo_cont[c0] = 1
+
+    while i < len(paises):
+        p = paises[i]
+        if p["POBLACION"] > max_pob["POBLACION"]:
+            max_pob = p
+        if p["POBLACION"] < min_pob["POBLACION"]:
+            min_pob = p
+        if p["SUPERFICIE"] > max_sup["SUPERFICIE"]:
+            max_sup = p
+        if p["SUPERFICIE"] < min_sup["SUPERFICIE"]:
+            min_sup = p
+        suma_pob += p["POBLACION"]
+        suma_sup += p["SUPERFICIE"]
+        cont = p["CONTINENTE"]
+        if cont in conteo_cont:
+            conteo_cont[cont] += 1
+        else:
+            conteo_cont[cont] = 1
+        i += 1
+
+    prom_pob = suma_pob / float(len(paises))
+    prom_sup = suma_sup / float(len(paises))
+
+    print("Mayor población:  ", max_pob["NOMBRE"], "(", max_pob["POBLACION"], ")")
+    print("Menor población:  ", min_pob["NOMBRE"], "(", min_pob["POBLACION"], ")")
+    print("Mayor superficie: ", max_sup["NOMBRE"], "(", max_sup["SUPERFICIE"], "km² )")
+    print("Menor superficie: ", min_sup["NOMBRE"], "(", min_sup["SUPERFICIE"], "km² )")
+    print("Promedio población: ", prom_pob)
+    print("Promedio superficie:", prom_sup)
+    print("Países por continente:")
+    for cont in sorted(conteo_cont.keys()):
+        print(" -", cont, ":", conteo_cont[cont])
+
+def elegir_archivo():
+    print("\nArchivo CSV a usar (Enter para 'paises.csv') - también acepta ruta completa (C:\\ruta\\archivo.csv):")
+    nombre = input("> ").strip()
+    if nombre:
+        return nombre
+    return "paises.csv"
+
+def menu():
+    print("\n" + "="*60)
+    print("   GESTIÓN DE PAÍSES - CSV")
+    print("="*60)
+    print("1) Listar países")
+    print("2) Agregar país")
+    print("3) Actualizar país (población/superficie)")
+    print("4) Eliminar país")
+    print("5) Buscar país")
+    print("6) Filtrar por continente")
+    print("7) Ordenar por población/superficie (A/D)")  # <--- cambio
+    print("8) Ordenar (general: nombre/población/superficie)")
+    print("9) Estadísticas")
+    print("10) Guardar cambios")
+    print("0) Salir")
+    return input_no_vacio("Opción: ")
+
+def main():
+    archivo = elegir_archivo()
+    paises = cargar_datos(archivo)
+    print("Cargados", len(paises), "país(es) desde", "'" + archivo + "'.")
+    cambios = False
+
+    while True:
+        op = menu()
+        if op == "1":
+            mostrar_paises(paises)
+        elif op == "2":
+            agregar_pais(paises); cambios = True
+        elif op == "3":
+            actualizar_pais(paises); cambios = True
+        elif op == "4":
+            eliminar_pais(paises); cambios = True
+        elif op == "5":
+            buscar_pais(paises)
+        elif op == "6":
+            filtrar_por_continente(paises)
+        elif op == "7":
+            ordenar_pob_sup(paises); cambios = True
+        elif op == "8":
+            ordenar_paises(paises); cambios = True
+        elif op == "9":
+            estadisticas(paises)
+        elif op == "10":
+            guardar_datos(archivo, paises)
+            cambios = False
+            print("Guardado en", "'" + archivo + "'.")
+        elif op == "0":
+            if cambios:
+                s = input("Hay cambios sin guardar. ¿Guardar ahora? (s/n): ").strip().lower()
+                if s == "s":
+                    guardar_datos(archivo, paises)
+                    print("Guardado en", "'" + archivo + "'.")
+            print("Hasta luego.")
+            break
+        else:
+            print("Opción inválida.")
+        input("\nEnter para continuar...")
+
+if __name__ == "__main__":
+    main()
